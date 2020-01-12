@@ -47,26 +47,54 @@ Layer<T> :: __weight_to_neuron_matMul__()
     // Initializes the matrix to be returned
     Eigen::Matrix<T, -1, 1> return_disposable;
     T var_disposable = 0;
-    return_disposable.resize(this->num_cols, 1);
+    T *disposable = (T*)calloc(this->num_rows, sizeof(T));
+    
 
     uint32_t i = 0, j = 0;
 
-    while(i < this->num_cols)
+    if((this->_activation_func_ == "softmax") || (this->_activation_func_ == "hardmax"))
     {
-        while(j < this->num_rows)
+        return_disposable.resize(this->num_rows, 1);
+        while(i < this->num_rows)
         {
-            var_disposable += this->get_neuron_val(j) * this->get_variable_val(j, i);
-            j++;
+            disposable[i] = this->get_neuron_val(i);
+            i++;
+        }i=0;
+        while(i < this->num_rows)
+        {
+            return_disposable.row(i).col(0) << __ret_activated_val__(disposable, this->_activation_func_, this->num_rows, i);
+            i++;
         }
-        return_disposable.row(i).col(0) << __ret_activated_val__(var_disposable, this->_activation_func_);
 
-        //reset var_dispoasable to itial state
-        var_disposable = 0;
-        j = 0;
-        i++;
+        return return_disposable;
     }
-
-    return return_disposable;
+    else
+    {
+        if(!this->is_oNeuron){
+            return_disposable.resize(this->num_cols, 1);
+            while(i < this->num_cols)
+            {
+                while(j < this->num_rows)
+                {
+                    var_disposable += this->get_neuron_val(j) * this->get_variable_val(j, i);
+                    j++;
+                }
+                return_disposable.row(i).col(0) << __ret_activated_val__(var_disposable, this->_activation_func_);
+        
+                //reset var_dispoasable to itial state
+                var_disposable = 0;
+                j = 0;
+                i++;
+            }}
+        else{
+            return_disposable.resize(this->num_rows, 1);
+            while(j < this->num_rows)
+            {
+                return_disposable.row(j).col(0) << __ret_activated_val__(var_disposable, this->_activation_func_);
+                j++;
+            }}
+        return return_disposable;
+    }
 }
 
 template<class T>
@@ -84,7 +112,7 @@ template<class T>
 Layer<T> :: Layer(int nRow, std::string _activation_func_)
 {
     this->num_rows = nRow;
-    this->num_cols = 1;
+    this->num_cols = nRow;
     this->_activation_func_ = _activation_func_;
     this->Mat2D.resize(0, 0);
     this->NeuronArr1D.resize(nRow, 1);
@@ -209,7 +237,15 @@ Layer<T> :: format_variable_mat(T **mat, unsigned num_rows, unsigned num_cols)
 template<class T> inline void
 Layer<T> :: feed_forward(Layer<T> *&next)
 {
+    this->is_oNeuron = false;
     next->set_NeuronArr1D(this->__weight_to_neuron_matMul__());
+}
+
+template<class T> inline void
+Layer<T> :: feed_forward()
+{
+    this->is_oNeuron = true;
+    this->set_NeuronArr1D(this->__weight_to_neuron_matMul__());
 }
 
 template<class T> void
