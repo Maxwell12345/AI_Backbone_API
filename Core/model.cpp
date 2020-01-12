@@ -2,7 +2,6 @@
 #include <string>
 #include <vector>
 #include "layer_matrix.hpp"
-#include "/Users/idler/Desktop/GitHub/AI_Backbone/Mat_mem/back_propagation.hpp"
 #include "extern_files.hpp"
 
 template<typename T> static Eigen::Matrix<T, -1, 1>
