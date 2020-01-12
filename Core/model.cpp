@@ -50,12 +50,14 @@ template<class T>
 class Dense
 {
 public:
-    Dense(bool weight_range, unsigned epochs, unsigned *input_shape, bool print, T lr, std::string cost);
+    Dense(bool weight_range, unsigned epochs, bool print, T lr, std::string cost);
     inline void initialize_network_input(T **);
     inline void initialize_network_input(std::vector<std::vector<T> >);
 
     inline void initialize_network_output(T **);
     inline void initialize_network_output(std::vector<std::vector<T> >);
+
+    inline void set_input_shape(unsigned int *inp_shape);
 
     // inline void initialize_network_input(T **[]);
     inline void initialize_global_variables(void);
@@ -70,10 +72,10 @@ private:
     Layer<T> **network;
     _update_variable_mat_<T> mem;
     unsigned num_layers;
-    unsigned *input_shape;
     unsigned epochs;
     std::string cost;
-    
+
+    unsigned int *input_shape;
     std::vector<unsigned> lSize_arr;
     std::vector<std::string> act_func_arr;
     bool weight_range;
