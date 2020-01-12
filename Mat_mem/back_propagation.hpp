@@ -44,31 +44,63 @@ _update_variable_mat_<T> :: record_mat_data(Eigen::Matrix<T, -1, -1> *history)
 }
 
 template<class T> inline void
-_update_variable_mat_<T> :: format_y_data(T *y_data)
+_update_variable_mat_<T> :: set_lArr(std::vector<unsigned> lArr)
 {
-    uint32_t i = 0;
-    while(i < this->lSize_arr[this->num_layers - 1])
+    this->lSize_arr = lArr;
+}
+
+template<class T> inline void
+_update_variable_mat_<T> :: format_y_data(T **y_data)
+{
+    uint32_t i = 0, j = 0;
+    
+    Eigen::Matrix<T, -1, 1> set_disposable;
+    set_disposable.resize(this->lSize_arr[this->lSize_arr.size() - 1], 1);
+
+    while(i < this->num_sets)
     {
-        this->y_data.row(i).col(0) << y_data[i];
+        while(j < this->lSize_arr[this->lSize_arr.size() - 1])
+        {
+            set_disposable.row(i).col(0) << y_data[i][j];
+            j++;
+        }
+        this->y_data.push_back(set_disposable);
+        this->y_data[i].resize(this->lSize_arr[this->lSize_arr.size() - 1], 1);
+        set_disposable.setZero();
+        j = 0;
+        i++;
     }
 }
 
 template<class T> inline void
-_update_variable_mat_<T> :: format_y_data(std::vector<T> y_data)
+_update_variable_mat_<T> :: format_y_data(std::vector<std::vector<T> > y_data)
 {
-    uint32_t i = 0;
-    while(i < y_data.size())
+    uint32_t i = 0, j = 0;
+    
+    Eigen::Matrix<T, -1, 1> set_disposable;
+    set_disposable.resize(this->lSize_arr[lSize_arr.size() - 1], 1);
+
+    while(i < this->num_sets)
     {
-        this->y_data.row(i).col(0) << y_data[i];
+        while(j < this->lSize_arr[this->lSize_arr.size() - 1])
+        {
+            set_disposable.row(i).col(0) << y_data[i][j];
+            j++;
+        }
+        this->y_data.push_back(set_disposable);
+        this->y_data[i].resize(this->lSize_arr[this->lSize_arr.size() - 1], 1);
+        set_disposable.setZero();
+        j = 0;
+        i++;
     }
 }
 
 template<class T> inline T
 _update_variable_mat_<T> :: get_error_val(T x, uint32_t index)
 {
-    if(this->cost == "MeanSqrErr") { return (T)pow(x - this->y_data(index, 0), 2); }
-    else if(this->cost == "MeanAbsErr") { return (T)abs(x - this->y_data(index, 0)); }
-    else if(this->cost == "cat_crossentropy") { return (T)-1 * (T)log(x) * this->y_data(index, 0); }
+    if(this->cost == "MeanSqrErr") { return (T)pow(x - this->y_data[this->epoch_idx](index, 0), 2); }
+    else if(this->cost == "MeanAbsErr") { return (T)abs(x - this->y_data[this->epoch_idx](index, 0)); }
+    else if(this->cost == "cat_crossentropy") { return (T)-1 * (T)log(x) * this->y_data[this->epoch_idx](index, 0); }
     // categorical crossentropy (For when the prob outputs ARE NOT binary)
     else
     {
@@ -92,7 +124,7 @@ _update_variable_mat_<T> :: get_error_val(Eigen::Matrix<T, -1, 1> outps, bool ge
     {
         while(i < n)
         {
-            _error += (T)pow((outps(i, 0) - this->y_data(i, 0)), 2);
+            _error += (T)pow((outps(i, 0) - this->y_data[this->epoch_idx](i, 0)), 2);
         }
         return _error;
     }
@@ -100,7 +132,7 @@ _update_variable_mat_<T> :: get_error_val(Eigen::Matrix<T, -1, 1> outps, bool ge
     {
         while(i < n)
         {
-            _error += (T)abs(outps(i, 0) - this->y_data(i, 0));
+            _error += (T)abs(outps(i, 0) - this->y_data[this->epoch_idx](i, 0));
         }
         return _error;
     }
@@ -109,7 +141,7 @@ _update_variable_mat_<T> :: get_error_val(Eigen::Matrix<T, -1, 1> outps, bool ge
     {
         while(i < n)
         {
-            _error += (T)log(outps(i, 0)) * this->y_data(i, 0);
+            _error += (T)log(outps(i, 0)) * this->y_data[this->epoch_idx](i, 0);
         }
         return -1 * _error;
     }
@@ -118,7 +150,7 @@ _update_variable_mat_<T> :: get_error_val(Eigen::Matrix<T, -1, 1> outps, bool ge
     // {
     //     while(i < n)
     //     {
-    //         _error += (T)log(outps(i, 0)) * this->y_data(i, 0);
+    //         _error += (T)log(outps(i, 0)) * this->y_data[this->epoch_idx](i, 0);
     //     }
     //     return _error;
     // }
