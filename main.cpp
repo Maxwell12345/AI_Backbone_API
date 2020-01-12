@@ -1,35 +1,54 @@
 #include <iostream>
 #include "Core/model.hpp"
 
+void setData(std::vector<std::vector<double> > &inp, std::vector<std::vector<double> > &out)
+{
+    std::vector<double> d;
+    d.push_back(0);d.push_back(1);d.push_back(0);d.push_back(1); //1
+    inp.push_back(d);d.clear();
+    d.push_back(0);d.push_back(0);d.push_back(0);d.push_back(1); //0
+    inp.push_back(d);d.clear();
+    d.push_back(0);d.push_back(1);d.push_back(1);d.push_back(1); //0
+    inp.push_back(d);d.clear();
+    d.push_back(1);d.push_back(1);d.push_back(0);d.push_back(1); //0
+    inp.push_back(d);d.clear();
+    d.push_back(1);d.push_back(1);d.push_back(1);d.push_back(1); //0
+    inp.push_back(d);d.clear();
+    d.push_back(0);d.push_back(0);d.push_back(0);d.push_back(0); //0
+    inp.push_back(d);d.clear();
+    d.push_back(0);d.push_back(1);d.push_back(1);d.push_back(0); //1
+    inp.push_back(d);d.clear();
+    d.push_back(1);d.push_back(0);d.push_back(0);d.push_back(1); //1
+    inp.push_back(d);d.clear();
+
+    d.push_back(1);d.push_back(0);out.push_back(d);d.clear();
+    d.push_back(0);d.push_back(1);out.push_back(d);d.clear();
+    d.push_back(0);d.push_back(1);out.push_back(d);d.clear();
+    d.push_back(0);d.push_back(1);out.push_back(d);d.clear();
+    d.push_back(0);d.push_back(1);out.push_back(d);d.clear();
+    d.push_back(0);d.push_back(1);out.push_back(d);d.clear();
+    d.push_back(1);d.push_back(0);out.push_back(d);d.clear();
+    d.push_back(1);d.push_back(0);out.push_back(d);d.clear();
+}
+
 int main(int argc, const char **argv)
 {
     std::cout << argv[0] << std::endl;
-    double **inp = (double **)malloc(sizeof(double **));
-    double **out = (double **)malloc(sizeof(double **));
+    std::vector<std::vector<double> > inp;
+    std::vector<std::vector<double> > out;
+    setData(inp, out); // xor gate io
 
-    int j = 1;
-    for(int i = 0; i < 3; ++i)
-    {
-        inp[i] = (double *)malloc(sizeof(double) * 3);
-        inp[i][0] = 1; inp[i][1] = 2 + 1; inp[i][2] = 3;
-        j += 1;
-    }j = 1;
+    unsigned int* inp_format = NULL; inp_format = (unsigned int *)calloc(2, sizeof(unsigned int));
+    inp_format[0] = 8; inp_format[1] = 4;
 
-    for(int i = 0; i < 3; ++i)
-    {
-        out[i] = (double *)malloc(sizeof(double) * 3);
-        out[i][0] = i + j; out[i][1] = i + j + 1; out[i][2] = i + j + 2;
-        j += 1;
-    }
+    unsigned epochs = 16;
 
-    unsigned inp_format[2] = {3, 3};
+    Dense<double> *model = new Dense<double>(false, epochs, true, 0.01, "cat_crossentropy");
+    model->set_input_shape(inp_format);
+    model->add(4, "sigmoid");
+    model->add(3, "sigmoid");
 
-    unsigned epochs = 3;
-
-    Dense<double> *model = new Dense<double>(true, epochs, inp_format, true, 0.01, "MeanSqrErr");
-    model->add(3, "relu");
-    model->add(2, "leaky_relu");
-    model->add(3, "relu");
+    model->add(2, "sigmoid");
 
     model->initialize_network_input(inp);
     model->initialize_network_output(out);
