@@ -23,6 +23,10 @@ Dense<T> :: Dense(bool weight_range, unsigned epochs, unsigned *input_shape, boo
     this->input_shape = input_shape;
     this->learning_rate = lr;
     this->cost = cost;
+        
+    this->mem.learning_rate = this->learning_rate;
+    this->mem.activation_func_arr = this->act_func_arr;
+    this->mem.cost = this->cost;
 }
 
 template<class T> inline void
@@ -101,12 +105,15 @@ Dense<T> :: initialize_network_input(std::vector<std::vector<T> > inp)
 template<class T> inline void
 Dense<T> :: initialize_network_output(T **y_data)
 {
+    this->mem.set_lArr(this->lSize_arr);
+    this->mem.num_sets = this->input_shape[0];
     this->mem.format_y_data(y_data);
 }
 
 template<class T> inline void
 Dense<T> :: initialize_network_output(std::vector<std::vector<T> > y_data)
 {
+    this->mem.num_sets = this->input_shape[0];
     this->mem.format_y_data(y_data);
 }
 
@@ -139,10 +146,7 @@ Dense<T> :: train()
 
     int data_idx = 1;
     init_mat<T>();
-    this->mem.lSize_arr = this->lSize_arr;
-    this->mem.learning_rate = this->learning_rate;
-    this->mem.activation_func_arr = this->act_func_arr;
-    this->mem.cost = this->cost;
+
     
     while(ii < this->lSize_arr.size() - 1)
     {
