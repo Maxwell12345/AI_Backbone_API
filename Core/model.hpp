@@ -13,20 +13,26 @@
 #include "extern_files.hpp"
 
 template<class T>
-Dense<T> :: Dense(bool weight_range, unsigned epochs, unsigned *input_shape, bool print, T lr, std::string cost)
+Dense<T> :: Dense(bool weight_range, unsigned epochs, bool print, T lr, std::string cost)
 {
     this->num_layers = 0;
     this->weight_range = weight_range;
     this->epochs = epochs;
     this->print = print;
     this->network = (Layer<T> **)malloc(sizeof(Layer<T> *));
-    this->input_shape = input_shape;
     this->learning_rate = lr;
     this->cost = cost;
         
     this->mem.learning_rate = this->learning_rate;
-    this->mem.activation_func_arr = this->act_func_arr;
     this->mem.cost = this->cost;
+}
+
+template<class T> inline void
+Dense<T> :: set_input_shape(unsigned int *inp_shape)
+{
+    this->input_shape = (unsigned int *)calloc(2, sizeof(unsigned int));
+    this->input_shape[0] = (inp_shape[0]);
+    this->input_shape[1] = (inp_shape[1]);
 }
 
 template<class T> inline void
@@ -52,6 +58,7 @@ Dense<T> :: initialize_global_variables()
         this->network[i - 1]->feed_forward(this->network[i]);
         i++;
     }
+    this->network[this->num_layers - 1]->feed_forward();
 
     if(this->print)
     {
@@ -73,6 +80,7 @@ Dense<T> :: initialize_network_input(T **inp)
             set_disposable.row(i).col(0) << inp[n][i];
             i++;
         }
+        this->input_data[n].resize(this->input_shape[1], 1);
         this->input_data.push_back(set_disposable);
         set_disposable.setZero();
         n++;
@@ -84,17 +92,17 @@ template<class T> inline void
 Dense<T> :: initialize_network_input(std::vector<std::vector<T> > inp)
 {
     uint32_t i = 0, n = 0;
-    //this->input_data = (Eigen::Matrix<T, -1, 1> *)malloc(sizeof(Eigen::Matrix<T, -1, 1>) * this->input_shape[0]);
     Eigen::Matrix<T, -1, 1> set_disposable;
     set_disposable.resize(this->input_shape[1], 1);
     while(n < this->input_shape[0])
     {
-        this->input_data[n].resize(this->input_shape[1], 1);
+        //this->input_data[n].resize(this->input_shape[1], 1);
         while(i < this->input_shape[1])
         {
             set_disposable.row(i).col(0) << inp[n][i];
             i++;
         }
+        //this->input_data[n].resize(this->input_shape[1], 1);
         this->input_data.push_back(set_disposable);
         set_disposable.setZero();
         n++;
@@ -113,6 +121,7 @@ Dense<T> :: initialize_network_output(T **y_data)
 template<class T> inline void
 Dense<T> :: initialize_network_output(std::vector<std::vector<T> > y_data)
 {
+    this->mem.set_lArr(this->lSize_arr);
     this->mem.num_sets = this->input_shape[0];
     this->mem.format_y_data(y_data);
 }
@@ -146,6 +155,7 @@ Dense<T> :: train()
 
     int data_idx = 1;
     init_mat<T>();
+    this->mem.activation_func_arr = this->act_func_arr;
 
     
     while(ii < this->lSize_arr.size() - 1)
@@ -174,7 +184,7 @@ Dense<T> :: train()
         {
             this->network[i]->set_Mat2D(Layer<T>::format_variable_mat(__W_Mat_Mem__<T>[/*n - 1*/ 0][i], this->lSize_arr[i], this->lSize_arr[i + 1]));
             this->network[i]->feed_forward(this->network[i + 1]);
-        }
+        }this->network[this->num_layers - 1]->feed_forward(this->network[this->num_layers - 1]);
 
         if(this->print)
         {
