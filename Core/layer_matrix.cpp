@@ -29,6 +29,8 @@ public:
 
     Eigen::Matrix<T, -1, 1> __weight_to_neuron_matMul__(void);
     inline void feed_forward(Layer<T> *&next);
+    inline void feed_forward(void);
+
     
     void toString(void);
 
@@ -40,6 +42,7 @@ private:
     Eigen::Matrix<T, -1, 1> NeuronArr1D;
     std::string _activation_func_;
     bool weight_range;
+    bool is_oNeuron;
 
     //Impliment bias array later
     // bias array
