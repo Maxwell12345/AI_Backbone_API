@@ -57,6 +57,45 @@ __ret_activated_val__(T x, std::string act_func)
     }
 }
 
+template<class T> inline T
+__ret_activated_val__(T *x, std::string act_func, uint32_t num_oNeurons, uint32_t idx)
+{
+    uint32_t i = 0;
+    T rSum = 0;
+    if(act_func == "softmax")
+    {
+        while(i < num_oNeurons)
+        {
+            rSum += (T)exp(x[i]);
+            i++;
+        }
+        return (T)exp(x[idx]) / rSum;
+    }
+    else if(act_func == "hardmax")
+    {
+        while(i < num_oNeurons - 1)
+        {
+            if(x[i] > x[i+1])
+            {
+                rSum = x[i];
+            }
+            else
+            {
+                rSum = x[i+1];
+            }
+            i++;
+        }
+        if(rSum == x[idx])
+        {
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+}
+
 //This return value is based on the notion that the inputed (x) is already activated
 //e.g. 1/1+e^-x = y,  y(1-y) = y'
 template<class T> inline T 
