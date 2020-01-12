@@ -61,7 +61,7 @@ _update_variable_mat_<T> :: format_y_data(T **y_data)
     {
         while(j < this->lSize_arr[this->lSize_arr.size() - 1])
         {
-            set_disposable.row(i).col(0) << y_data[i][j];
+            set_disposable.row(j).col(0) << y_data[i][j];
             j++;
         }
         this->y_data.push_back(set_disposable);
@@ -84,7 +84,7 @@ _update_variable_mat_<T> :: format_y_data(std::vector<std::vector<T> > y_data)
     {
         while(j < this->lSize_arr[this->lSize_arr.size() - 1])
         {
-            set_disposable.row(i).col(0) << y_data[i][j];
+            set_disposable.row(j).col(0) << y_data[i][j];
             j++;
         }
         this->y_data.push_back(set_disposable);
@@ -166,12 +166,12 @@ template<class T> inline T
 _update_variable_mat_<T> :: dirivative(T *x_arr, T neuronOutp, unsigned num_layers_to_backproagate, unsigned oNeuron_idx)
 {
     uint32_t nLayers = 0;
-    T a= neuronOutp;
-    T weight_mutator = this->get_error_val(a, oNeuron_idx);
+    T weight_mutator = this->get_error_val(neuronOutp, oNeuron_idx);
 
     while(nLayers < num_layers_to_backproagate)
     {
-        weight_mutator *= __activation_func_derivatives__(x_arr[nLayers], this->activation_func_arr[this->lSize_arr.size() - nLayers - 1]);
+        weight_mutator *= __activation_func_derivatives__(x_arr[nLayers], 
+            this->activation_func_arr[this->lSize_arr.size() - nLayers - 1]);
         nLayers ++;
     }
     
