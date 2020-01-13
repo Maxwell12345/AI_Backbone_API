@@ -198,7 +198,7 @@ _update_variable_mat_<T> :: update_network_variables(Eigen::Matrix<T, -1, 1> neu
 {
     //ptr array that hols the data regarding each neuron value
     T *x_arr_disposable = (T *)calloc(2, sizeof(T));
-    
+
     /* If you are going to optimize algorithm declare and initialize with the following code */
     //uint32_t _count = 1, nLayers = 0;
     //This basically holds the un learingrate returned chain list product
