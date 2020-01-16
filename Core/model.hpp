@@ -148,6 +148,26 @@ Dense<T> :: allocate_network_mem()
 }
 
 template<class T> inline void
+Dense<T> :: init_BP_network(Layer<T> **net)
+{
+    uint32_t ii = 0, j = 0;
+    T **net_disposable = (T **)calloc(this->num_layers, sizeof(T*));
+    while(ii < this->num_layers)
+    {
+        net_disposable[ii] = (T *)calloc(this->lSize_arr[ii], sizeof(T));
+        while(j < this->lSize_arr[ii])
+        {
+            net_disposable[ii][j] = net[ii]->get_neuron_val(j);
+            j++;
+        }
+        j = 0;
+        ii++;
+    }
+    this->mem.set_network(net_disposable);
+    free(net_disposable);
+}
+
+template<class T> inline void
 Dense<T> :: train()
 {
     uint32_t ii = 0;
@@ -156,7 +176,7 @@ Dense<T> :: train()
     int data_idx = 1;
     init_mat<T>();
     this->mem.activation_func_arr = this->act_func_arr;
-
+    this->init_BP_network(this->network);
     
     while(ii < this->lSize_arr.size() - 1)
     {
@@ -165,7 +185,8 @@ Dense<T> :: train()
         ii++;
     }ii=0;
     this->mem.record_mat_data(history);
-    this->mem.update_network_variables(this->network[num_layers - 1]->get_neuron_mat());
+    this->mem.update_network_variables();
+
     for(int n = 1; n < this->epochs; ++n)
     {
         this->network[0]->set_NeuronArr1D(this->input_data[data_idx]);
@@ -184,7 +205,7 @@ Dense<T> :: train()
         {
             this->network[i]->set_Mat2D(Layer<T>::format_variable_mat(__W_Mat_Mem__<T>[/*n - 1*/ 0][i], this->lSize_arr[i], this->lSize_arr[i + 1]));
             this->network[i]->feed_forward(this->network[i + 1]);
-        }this->network[this->num_layers - 1]->feed_forward(this->network[this->num_layers - 1]);
+        }this->network[this->num_layers - 1]->feed_forward();
 
         if(this->print)
         {
@@ -198,7 +219,8 @@ Dense<T> :: train()
             ii++;
         }ii=0;
         this->mem.record_mat_data(history);
-        this->mem.update_network_variables(this->network[num_layers - 1]->get_neuron_mat());
+        this->init_BP_network(this->network);
+        this->mem.update_network_variables();
     }
     free(history);
 }
