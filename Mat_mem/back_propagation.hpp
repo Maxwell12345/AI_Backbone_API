@@ -88,7 +88,6 @@ _update_variable_mat_<T> :: format_y_data(std::vector<std::vector<T> > y_data)
             j++;
         }
         this->y_data.push_back(set_disposable);
-        this->y_data[i].resize(this->lSize_arr[this->lSize_arr.size() - 1], 1);
         set_disposable.setZero();
         j = 0;
         i++;
@@ -98,7 +97,8 @@ _update_variable_mat_<T> :: format_y_data(std::vector<std::vector<T> > y_data)
 template<class T> inline T
 _update_variable_mat_<T> :: get_error_val(T x, uint32_t index)
 {
-    if(this->cost == "MeanSqrErr") { return (T)pow(x - this->y_data[this->epoch_idx](index, 0), 2); }
+    this->y_data[index].resize(this->lSize_arr[this->lSize_arr.size() - 1], 1);
+    if(this->cost == "MeanSqrErr") { return (x - this->y_data[this->epoch_idx](index, 0)); } // Get dirvative!!
     else if(this->cost == "MeanAbsErr") { return (T)abs(x - this->y_data[this->epoch_idx](index, 0)); }
     else if(this->cost == "cat_crossentropy") { return (T)-1 * (T)log(x) * this->y_data[this->epoch_idx](index, 0); }
     // categorical crossentropy (For when the prob outputs ARE NOT binary)
@@ -162,113 +162,148 @@ _update_variable_mat_<T> :: get_error_val(Eigen::Matrix<T, -1, 1> outps, bool ge
     
 }
 
-template<class T> inline T
-_update_variable_mat_<T> :: dirivative(T *x_arr, T neuronOutp, unsigned num_layers_to_backproagate, unsigned oNeuron_idx)
-{
-    uint32_t nLayers = 0;
-    T weight_mutator = this->get_error_val(neuronOutp, oNeuron_idx);
+// template<class T> inline T
+// _update_variable_mat_<T> :: dirivative(T *x_arr, unsigned num_layers_to_backproagate, unsigned oNeuron_idx)
+// {
+//     uint32_t nLayers = 0;
+//     T weight_mutator = this->get_error_val(neuronOutp, oNeuron_idx); // ERROR IN ERR_CATCH_FILE
 
-    while(nLayers < num_layers_to_backproagate)
-    {
-        weight_mutator *= __activation_func_derivatives__(x_arr[nLayers], 
-            this->activation_func_arr[this->lSize_arr.size() - nLayers - 1]);
-        nLayers ++;
-    }
+//     while(nLayers < num_layers_to_backproagate)
+//     {
+//         weight_mutator *= __activation_func_derivatives__(x_arr[nLayers], 
+//             this->activation_func_arr[this->lSize_arr.size() - nLayers - 1]);
+//         nLayers ++;
+//     }
     
+//     return weight_mutator;
+// }
+
+template<class T> inline T
+_update_variable_mat_<T> :: dirivative(T x_val, uint32_t update_idx)
+{
+    T weight_mutator = __activation_func_derivatives__(x_val, this->activation_func_arr[update_idx]);
+
     return weight_mutator;
 }
 
 template<class T> inline T
-_update_variable_mat_<T> :: dirivative(T *x_arr, uint32_t update_idx)
+_update_variable_mat_<T> :: dirivative(T x_val, T nVal, uint32_t oNeuron_idx)
 {
-    uint32_t nLayers = 0;
-    T weight_mutator = 1;
+    return (this->get_error_val(x_val, oNeuron_idx) * __activation_func_derivatives__(x_val, this->activation_func_arr[this->lSize_arr.size() - 1]));
+}
 
-    while(nLayers < 2)
+
+
+template<class T>inline void
+_update_variable_mat_<T> :: set_network(T **real_network)
+{
+    uint32_t i = 0, j = 0;
+    std::vector<T> set_disposable;
+    while(i < this->lSize_arr.size())
     {
-        weight_mutator *= __activation_func_derivatives__(x_arr[nLayers], this->activation_func_arr[update_idx + 1 - nLayers]);
-        nLayers++;
+        while(j < this->lSize_arr[i])
+        {
+            set_disposable.push_back(real_network[i][j]);
+            j++;
+        }
+        this->pseudo_network.push_back(set_disposable);
+        set_disposable.clear();
+        j = 0;
+        i++;
     }
-
-    return weight_mutator;
 }
 
 template<class T> inline void
-_update_variable_mat_<T> :: update_network_variables(Eigen::Matrix<T, -1, 1> neuronOutps)
+_update_variable_mat_<T> :: update_network_variables()
 {
     //ptr array that hols the data regarding each neuron value
-    T *x_arr_disposable = (T *)calloc(2, sizeof(T));
+    T *x_arr_disposable = (T *)malloc(2 * sizeof(T));
+    T *error_mat = (T *)malloc(sizeof(T) * this->lSize_arr[this->lSize_arr.size() - 1]);
+    T val_disposable;
 
-    /* If you are going to optimize algorithm declare and initialize with the following code */
-    //uint32_t _count = 1, nLayers = 0;
-    //This basically holds the un learingrate returned chain list product
-    //e.g. (cost dir) * (layer 1 dir) * (layer 2 dir) * lr
-    // PtrAutoDispose<T> *dirivative_optimizer(new T());
-
-    // while(nLayers < this->lSize_arr.size())
-    // {
-    //     _count *= this->lSize_arr[this->lSize_arr.size() - nLayers - 1];
-    //     dirivative_optimizer = (PtrAutoDispose<T> *)calloc(_count, sizeof(PtrAutoDispose<T>));
-    //     nLayers++;
-    // }nLayers = 0; _count = 1;
-    neuronOutps.resize(this->lSize_arr[this->lSize_arr.size() - 1], 1);
-        
-    for(int n = this->lSize_arr.size() - 1; n > 0; --n)
+    T ***mat_disposable = (T ***)calloc(this->lSize_arr.size() - 1, sizeof(T**));
+    for(int n = 0; n < this->lSize_arr.size() - 1; ++n)
     {
-        if(n == this->lSize_arr.size() - 1)
-        {
-            for(int i = 0; i < this->lSize_arr[n - 1]; ++i)
-            {
-                for(int j = 0; j < this->lSize_arr[n]; ++j)
-                {
-                    x_arr_disposable[0] = __W_Mat_Mem__<T>[id - 1][n - 1][i][j];
-                    
-                    __W_Mat_Mem__<T>[id - 1][n - 1][i][j] = 
-                    (__W_Mat_Mem__<T>[id - 1][n - 1][i][j] - this->dirivative(x_arr_disposable, neuronOutps(i, 0), 1, i)) * this->learning_rate;
-                }
-            }
-        }
-        else
-        {
-            for(int o = 0; o < this->lSize_arr[n - 1]; ++o)
-            {
-                for(int i = 0; i < this->lSize_arr[n]; ++i)
-                {
-                    for(int j = 0; j < this->lSize_arr[n + 1]; ++j)
-                    {
-                        for(int c = 0; c < 2; ++c)
-                        {
-                            if(c == 0)
-                            {
-                                x_arr_disposable[c] = __W_Mat_Mem__<T>[id - 1][n - c][i][j];
-                            }
-                            else
-                            {
-                                x_arr_disposable[c] = __W_Mat_Mem__<T>[id - 1][n - c][o][i];
-                            }
-                        }
-
-                        __W_Mat_Mem__<T>[id - 1][n - 1][o][i] = 
-                        (__W_Mat_Mem__<T>[id - 1][n - 1][o][i] - this->dirivative(x_arr_disposable, n - 1)) * this->learning_rate;
-                    }
-                }
-            }
-        } 
+        mat_disposable[n] = (T**)calloc(this->lSize_arr[n], sizeof(T*));
+        for(int i = 0; i < this->lSize_arr[n]; ++i){mat_disposable[n][i] = (T*)calloc(this->lSize_arr[n+1], sizeof(T));}
     }
 
-    // for(int i = 0; i < this->lSize_arr[this->lSize_arr.size()] - 2; ++i)
+        
+    // for(int n = this->lSize_arr.size() - 2; n >= 0; --n)
     // {
-    //     for(int j = 0; j < this->lSize_arr[i]; ++j)
+    //     if(n == this->lSize_arr.size() - 2)
     //     {
-    //         T b = __W_Mat_Mem__<T>[id - 1][0][1][0];
-    //         for(int n = 0; n < this->lSize_arr[i + 1]; ++i)
+    //         for(int i = 0; i < this->lSize_arr[n]; ++i)
     //         {
-    //             __W_Mat_Mem__<T>[id - 1][i][j][n] =__W_Mat_Mem__<T>[id - 1][i][j][n] *  this->learning_rate;
+    //             T t = this->pseudo_network[n][i];
+    //             x_arr_disposable[0] = pseudo_network[n][i];
+    //             for(int j = 0; j < this->lSize_arr[n+1]; ++j)
+    //             {
+    //                 x_arr_disposable[1] = pseudo_network[n+1][j];
+
+    //                 //__W_Mat_Mem__<T>[id - 1][n][i][j] = (__W_Mat_Mem__<T>[id - 1][n][i][j] - 
+    //                 mat_disposable[n][i][j] = (this->dirivative(x_arr_disposable[0], x_arr_disposable[1], j));
+    //             }
+    //         }
+    //     }
+    //     else
+    //     {
+    //         // free(x_arr_disposable);
+    //         for(int i = 0; i < this->lSize_arr[n]; ++i)
+    //         {
+    //             val_disposable = pseudo_network[n][i];
+    //             for(int j = 0; j < this->lSize_arr[n+1]; ++j)
+    //             {
+    //                 //__W_Mat_Mem__<T>[id - 1][n][i][j] = (__W_Mat_Mem__<T>[id - 1][n][i][j] - 
+    //                 mat_disposable[n][i][j] = (this->dirivative(val_disposable, n) * __W_Mat_Mem__<T>[id - 1][n+1][j][i]);
+    //             }
     //         }
     //     }
     // }
+
+    // Get single cost value
+    // get dirivative of actication function of output neuron
+    // this creates an error matrix
+    for(int i = 0; i < this->lSize_arr[this->lSize_arr.size() - 1]; ++i)
+    {
+        error_mat[i] = get_error_val(this->pseudo_network[this->lSize_arr.size() - 1][i], i);
+        error_mat[i] *= __activation_func_derivatives__(this->pseudo_network[this->lSize_arr.size() - 1][i], this->activation_func_arr[this->lSize_arr.size() - 1]);
+    }
+    // these values are matrix multiplied with the activated values of the previous layer
+    for(int i = 0; i < this->lSize_arr[this->lSize_arr.size() - 2]; ++i)
+    {
+        for(int j = 0; j < this->lSize_arr[this->lSize_arr.size() - 1]; ++j)
+        {
+            __W_Mat_Mem__<T>[id - 1][this->lSize_arr.size() - 2][i][j] -= __W_Mat_Mem__<T>[id - 1][this->lSize_arr.size() - 2][i][j] * 
+            error_mat[j] * this->pseudo_network[this->lSize_arr.size() - 2][i] * this->learning_rate;
+        }
+    }
+
+    for(int i = 0; i < this->lSize_arr[0]; ++i)
+    {
+        for(int j = 0; j < this->lSize_arr[this->lSize_arr.size() - 2]; ++j)
+        {
+            for(int n = 0; n < this->lSize_arr[this->lSize_arr.size() - 1]; ++n)
+            {
+                __W_Mat_Mem__<T>[id - 1][0][i][j] -= __W_Mat_Mem__<T>[id - 1][0][i][j] * 
+                error_mat[n] * __activation_func_derivatives__(this->pseudo_network[1][j], activation_func_arr[1]) * 
+                this->pseudo_network[0][i] * learning_rate;
+            }
+        }
+    }
     
-    free(x_arr_disposable);
+
+    // for(int n = 0; n < this->lSize_arr.size() - 1; ++n)
+    // {
+    //     for(int i = 0; i < this->lSize_arr[n]; ++i)
+    //     {
+    //         for(int j = 0; j < this->lSize_arr[n+1]; ++j)
+    //         {
+    //             __W_Mat_Mem__<T>[id - 1][n][i][j] = __W_Mat_Mem__<T>[id - 1][n][i][j] - 
+    //                 mat_disposable[n][i][j] * this->learning_rate;
+    //         }
+    //     }
+    // }
 }
 
 #endif /*back_propagation_hpp*/
