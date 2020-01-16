@@ -57,16 +57,22 @@ __ret_activated_val__(T x, std::string act_func)
     }
 }
 
+template<typename T> T *cost_sum;
+uint32_t __oN_size__;
+
 template<class T> inline T
 __ret_activated_val__(T *x, std::string act_func, uint32_t num_oNeurons, uint32_t idx)
 {
     uint32_t i = 0;
     T rSum = 0;
+    cost_sum<T> = (T*)calloc(num_oNeurons, sizeof(T));
+    __oN_size__ = num_oNeurons;
     if(act_func == "softmax")
     {
         while(i < num_oNeurons)
         {
             rSum += (T)exp(x[i]);
+            cost_sum<T>[i] = (T)exp(x[i]);
             i++;
         }
         return (T)exp(x[idx]) / rSum;
@@ -78,19 +84,25 @@ __ret_activated_val__(T *x, std::string act_func, uint32_t num_oNeurons, uint32_
             if(x[i] > x[i+1])
             {
                 rSum = x[i];
-            }
-            else
-            {
+            }else{
                 rSum = x[i+1];
+            }
+            i++;
+        }i=0;
+        while(i < num_oNeurons - 1)
+        {
+            if(rSum == x[i])
+            {
+                cost_sum<T>[i] = 1;
+            }else{
+                cost_sum<T>[i] = 0;
             }
             i++;
         }
         if(rSum == x[idx])
         {
             return 1;
-        }
-        else
-        {
+        }else{
             return 0;
         }
     }
@@ -98,7 +110,7 @@ __ret_activated_val__(T *x, std::string act_func, uint32_t num_oNeurons, uint32_
 
 //This return value is based on the notion that the inputed (x) is already activated
 //e.g. 1/1+e^-x = y,  y(1-y) = y'
-template<class T> inline T 
+template<class T> inline T
 __activation_func_derivatives__(T x, std::string act_func)
 {
     if(act_func == "sigmoid")
@@ -134,6 +146,32 @@ __activation_func_derivatives__(T x, std::string act_func)
     else if(act_func == "asinh")
     {
         return (T)(1 / (T)(cosh(x)));
+    }
+    else if(act_func == "softmax")
+    {
+        uint32_t ii = 0;
+        T sumation_cost = 0;
+        // i and j are the value relative to the equation, and i is the index of the sum values
+        while(ii < __oN_size__)
+        {
+            sumation_cost += cost_sum<T>[ii];
+            ii++;
+        }ii=0;
+        while(ii < __oN_size__)
+        {
+            if(x == cost_sum<T>[ii])
+            {
+                return 1; // (cost_sum<T>[ii] * sumation_cost) * (1 - (cost_sum<T>[ii] * sumation_cost));
+            }
+            ii++;
+        }
+
+        return 0;
+    }
+    else if(act_func == "hardmax")
+    {
+        if(x == 0) return 0;
+        else return 1;
     }
     else
     {
