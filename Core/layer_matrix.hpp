@@ -90,7 +90,8 @@ Layer<T> :: __weight_to_neuron_matMul__()
             return_disposable.resize(this->num_rows, 1);
             while(j < this->num_rows)
             {
-                return_disposable.row(j).col(0) << __ret_activated_val__(var_disposable, this->_activation_func_);
+                var_disposable = this->get_neuron_val(j);
+                return_disposable.row(j).col(0) << __ret_activated_val__(var_disposable, this->_activation_func_);                
                 j++;
             }}
         return return_disposable;
