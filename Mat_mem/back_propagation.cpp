@@ -19,11 +19,15 @@ struct _update_variable_mat_
     inline void record_mat_data(Eigen::Matrix<T, -1, -1> *history);
     inline T get_error_val(Eigen::Matrix<T, -1, 1> outps, bool get_sumation, uint32_t index); // index is 0 if sumation is true
     inline T get_error_val(T x, uint32_t index);
-    inline T dirivative(T *, T, unsigned num_layers_to_backproagate, unsigned oNeuron_idx); 
-    inline T dirivative(T *, uint32_t update_idx); //update_idx is the index of the deepest mat being updated
+    inline T dirivative(T *, unsigned num_layers_to_backproagate, unsigned oNeuron_idx); 
+    inline T dirivative(T, uint32_t update_idx); //update_idx is the index of the deepest mat being updated
+    inline T dirivative(T, T, uint32_t oNeuron_idx);
     // The pointer array goes in order from the output neuron to the weight that needs to be update
     inline void format_y_data(T **);
     inline void format_y_data(std::vector<std::vector<T> >);
-    inline void update_network_variables(Eigen::Matrix<T, -1, 1> neuronOutps);
+    inline void update_network_variables(void);
     inline void set_lArr(std::vector<unsigned>);
+    inline void set_network(T**);
+
+    std::vector<std::vector<T> >pseudo_network;
 };
