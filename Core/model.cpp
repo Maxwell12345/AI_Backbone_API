@@ -63,7 +63,7 @@ public:
     inline void initialize_global_variables(void);
     inline void add(unsigned lSize);
     inline void add(unsigned lSize, std::string act_func);
-    inline void allocate_network_mem(void);
+    inline void init_BP_network(Layer<T> **);
     inline void train(void);
 
     void toCons(void);
@@ -82,5 +82,7 @@ private:
     bool print;
     std::vector<Eigen::Matrix<T, -1, 1> > input_data;
     T learning_rate;
+
+    inline void allocate_network_mem(void);
 };
 
