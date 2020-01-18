@@ -31,6 +31,12 @@ public:
     inline void feed_forward(Layer<T> *&next);
     inline void feed_forward(void);
 
+    inline void add_bias(T b_val);
+    inline T get_bias_val(unsigned idy);
+    inline Eigen::Matrix<T, -1, 1> get_bias_mat(void);
+    inline void set_bias_arr(T *);
+
+    inline bool get_bias_boolean_val(void);
     
     void toString(void);
 
@@ -40,9 +46,12 @@ public:
 private:
     Eigen::Matrix<T, -1, -1> Mat2D;
     Eigen::Matrix<T, -1, 1> NeuronArr1D;
+    Eigen::Matrix<T, -1, 1> bias_arr;
+    T bias_val;
     std::string _activation_func_;
     bool weight_range;
     bool is_oNeuron;
+    bool has_bias;
 
     //Impliment bias array later
     // bias array
