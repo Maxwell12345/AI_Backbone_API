@@ -106,6 +106,9 @@ __ret_activated_val__(T *x, std::string act_func, uint32_t num_oNeurons, uint32_
             return 0;
         }
     }
+    else{
+        return -1;
+    }
 }
 
 //This return value is based on the notion that the inputed (x) is already activated
