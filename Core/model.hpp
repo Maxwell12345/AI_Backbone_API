@@ -39,10 +39,18 @@ template<class T> inline void
 Dense<T> :: initialize_global_variables()
 {
     //Use this to initialize the back propogation
-    uint32_t i = 1;
+    uint32_t i = 0;
     this->network[0] = new Layer<T>(this->lSize_arr[0], this->lSize_arr[1], this->act_func_arr[0], this->weight_range);
     this->network[0]->set_NeuronArr1D(this->input_data[0]);
     this->network[0]->init_Mat2D();
+    if(this->bias_boolean_arr.size() == 0)
+    {
+        while(i < this->num_layers){
+            this->bias_boolean_arr.push_back(0); 
+            i++;
+        }
+    }i=1;
+
     if(this->bias_boolean_arr[0] == 1)
     {
         this->network[0]->add_bias(this->bias_val_arr[0]);
@@ -193,8 +201,8 @@ Dense<T> :: train()
         history[ii].resize(this->lSize_arr[ii], this->lSize_arr[ii+1]);
         history[ii] = this->network[ii]->get_variable_mat();
         
-        uint16_t A = this->network[ii]->get_bias_boolean_val();
-        if(this->network[ii]->get_bias_boolean_val() == 1)
+        uint16_t A = this->bias_boolean_arr[ii];
+        if(this->bias_boolean_arr[ii] == 1)
         {
             bias_history[ii].resize(this->lSize_arr[ii], 1);
             bias_history[ii] = this->network[ii]->get_bias_mat();
@@ -269,7 +277,7 @@ Dense<T> :: bias(T b_val)
             this->bias_val_arr.push_back(0);
             this->bias_boolean_arr.push_back(0);
             i++;
-        }while(i <= this->num_layers - (b_vec_size + 1));
+        }while(i < this->num_layers - (b_vec_size + 1));
     }
     this->bias_val_arr.push_back(b_val);
     this->bias_boolean_arr.push_back(1);

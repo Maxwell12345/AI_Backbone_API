@@ -158,14 +158,14 @@ int main(int argc, const char **argv)
     unsigned int* inp_format = NULL; inp_format = (unsigned int *)calloc(2, sizeof(unsigned int));
     inp_format[0] = 14; inp_format[1] = 4;
 
-    unsigned epochs = 2;
+    unsigned epochs = 200;
 
     Dense<double> *model = new Dense<double>(true, epochs, true, 0.01, "MeanSqrErr");
     model->set_input_shape(inp_format);
     model->add(4, "linear");
-    // model->bias(1);
-    model->add(3, "linear");
     model->bias(1);
+    model->add(3, "linear");
+    //model->bias(1);
     // model->add(4, "tanh");
     model->add(1, "linear"); // Need to work of backprop algorithms for cat_crossentropy and MeanSqrErr etc.
 
@@ -173,7 +173,6 @@ int main(int argc, const char **argv)
     model->initialize_network_output(out);
 
     model->initialize_global_variables();
-    std::cout << "\n\n\n\n\n\n";
 
     model->train();
     return 0;

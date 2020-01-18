@@ -15,7 +15,7 @@
 template<class T> class
 PtrAutoDispose 
 { 
-    T *ptr;  // Actual pointer 
+    T *ptr;  // Actual pointer
 public:
    explicit PtrAutoDispose(T *p = NULL) { ptr = p; } 
    ~PtrAutoDispose() { delete(ptr); } 

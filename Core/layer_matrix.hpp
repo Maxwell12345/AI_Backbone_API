@@ -291,6 +291,7 @@ template<class T> inline void
 Layer<T> :: set_bias_arr(T *bias_arr)
 {
     uint32_t i = 0;
+    this->bias_arr.resize(this->num_cols, 1);
     while(i < this->num_cols)
     {
         this->bias_arr.row(i).col(0) << bias_arr[i];
