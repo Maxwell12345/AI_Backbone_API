@@ -181,7 +181,7 @@ Dense<T> :: train()
     uint32_t ii = 0;
     Eigen::Matrix<T, -1, -1> *history = (Eigen::Matrix<T, -1, -1> *)calloc(this->lSize_arr.size() - 1, sizeof(Eigen::Matrix<T, -1, -1>));
     Eigen::Matrix<T, -1, 1> *bias_history = (Eigen::Matrix<T, -1, 1> *)calloc(this->lSize_arr.size() - 1, sizeof(Eigen::Matrix<T, -1, 1>));
-    std::vector<bool> b_n_arr;
+    std::vector<uint16_t> b_n_arr;
 
     int data_idx = 1;
     init_mat<T>();
@@ -192,16 +192,15 @@ Dense<T> :: train()
     {
         history[ii].resize(this->lSize_arr[ii], this->lSize_arr[ii+1]);
         history[ii] = this->network[ii]->get_variable_mat();
-
-        bool hasB = this->network[ii]->get_bias_boolean_val();
-        if(hasB)
+        
+        uint16_t A = this->network[ii]->get_bias_boolean_val();
+        if(this->network[ii]->get_bias_boolean_val() == 1)
         {
             bias_history[ii].resize(this->lSize_arr[ii], 1);
             bias_history[ii] = this->network[ii]->get_bias_mat();
         }
-        if(this->network[ii]->get_bias_boolean_val())b_n_arr.push_back(1);
-        else b_n_arr.push_back(0);
-        
+        b_n_arr.push_back(this->network[ii]->get_bias_boolean_val());
+        this->mem.b_n_arr.push_back(b_n_arr[ii]);
 
         ii++;
     }ii=0;
@@ -209,7 +208,6 @@ Dense<T> :: train()
     this->mem.set_bias(bias_history);
     this->mem.update_network_variables();
     this->mem.update_network_bias();
-    for(int i = 0; i < b_n_arr.size(); ++i)this->mem.b_n_arr.push_back(b_n_arr[i]);
     
 
     for(int n = 1; n < this->epochs; ++n)
@@ -230,7 +228,7 @@ Dense<T> :: train()
         for(int i = 1; i < this->num_layers - 1; ++i)
         {
             this->network[i]->set_Mat2D(Layer<T>::format_variable_mat(__W_Mat_Mem__<T>[/*n - 1*/ 0][i], this->lSize_arr[i], this->lSize_arr[i + 1]));
-            this->network[i]->set_bias_arr(__W_Bias_Mem__<T>[/*n - 1*/ 0][i]);
+            if(this->bias_boolean_arr[i] == 1){this->network[i]->set_bias_arr(__W_Bias_Mem__<T>[/*n - 1*/ 0][i]);}
             this->network[i]->feed_forward(this->network[i + 1]);
         }this->network[this->num_layers - 1]->feed_forward();
 

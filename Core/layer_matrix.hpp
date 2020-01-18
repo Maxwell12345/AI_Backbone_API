@@ -298,10 +298,11 @@ Layer<T> :: set_bias_arr(T *bias_arr)
     }
 }
 
-template<class T> inline bool
+template<class T> inline uint16_t
 Layer<T> :: get_bias_boolean_val()
 {
-    return this->has_bias;
+    if(this->has_bias) return 1;
+    else return 0;
 }
 
 template<class T> inline Eigen::Matrix<T, -1, 1>

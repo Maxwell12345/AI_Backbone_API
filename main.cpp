@@ -162,12 +162,12 @@ int main(int argc, const char **argv)
 
     Dense<double> *model = new Dense<double>(true, epochs, true, 0.01, "MeanSqrErr");
     model->set_input_shape(inp_format);
-    model->add(4, "relu");
-    model->bias(1);
-    model->add(8, "relu");
+    model->add(4, "linear");
+    // model->bias(1);
+    model->add(3, "linear");
     model->bias(1);
     // model->add(4, "tanh");
-    model->add(1, "relu"); // Need to work of backprop algorithms for cat_crossentropy and MeanSqrErr etc.
+    model->add(1, "linear"); // Need to work of backprop algorithms for cat_crossentropy and MeanSqrErr etc.
 
     model->initialize_network_input(inp);
     model->initialize_network_output(out);

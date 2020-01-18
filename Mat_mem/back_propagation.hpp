@@ -346,13 +346,7 @@ _update_variable_mat_<T> :: update_network_variables()
 template<typename T> inline void
 _update_variable_mat_<T> :: update_network_bias()
 {
-    for(int i = 0; i < 2; ++i)
-    {
-        for(int j = 0; j < lSize_arr[i+1]; ++j)
-        {
-            __W_Bias_Mem__<T>[id-1][i][j] = 1;//__W_Bias_Mem__<T>;
-        }
-    }
+    __W_Bias_Mem__<T>[id-1] = __W_Bias_Mem__<T>[id-1];
 }
 
 #endif /*back_propagation_hpp*/

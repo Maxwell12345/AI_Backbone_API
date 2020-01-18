@@ -36,7 +36,7 @@ public:
     inline Eigen::Matrix<T, -1, 1> get_bias_mat(void);
     inline void set_bias_arr(T *);
 
-    inline bool get_bias_boolean_val(void);
+    inline uint16_t get_bias_boolean_val(void);
     
     void toString(void);
 

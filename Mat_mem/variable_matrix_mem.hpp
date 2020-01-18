@@ -52,7 +52,7 @@ set_mat_mem(Eigen::Matrix<T, -1, -1> *history, std::vector<unsigned> lSize_arr)
 }
 
 template<class T> static void 
-set_bias_mem(Eigen::Matrix<T, -1, 1> *bias_history, std::vector<unsigned> lSize_arr, std::vector<uint8_t> b_n_arr)
+set_bias_mem(Eigen::Matrix<T, -1, 1> *bias_history, std::vector<unsigned> lSize_arr, std::vector<uint16_t> b_n_arr)
 {
     uint32_t i = 0, j = 0, n = 0;
     __W_Bias_Mem__<T> = (T ***)realloc(__W_Bias_Mem__<T>, sizeof(T **) * id);
@@ -73,3 +73,4 @@ set_bias_mem(Eigen::Matrix<T, -1, 1> *bias_history, std::vector<unsigned> lSize_
         i++;
     }
 }
+

@@ -79,7 +79,7 @@ private:
     unsigned int *input_shape;
     std::vector<unsigned> lSize_arr;
     std::vector<T> bias_val_arr;
-    std::vector<uint8_t> bias_boolean_arr;
+    std::vector<uint16_t> bias_boolean_arr;
     std::vector<std::string> act_func_arr;
     bool weight_range;
     bool print;

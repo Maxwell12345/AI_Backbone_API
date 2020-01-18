@@ -12,7 +12,7 @@ struct _update_variable_mat_
     std::vector<Eigen::Matrix<T, -1, 1> >y_data;
     std::string cost;
     std::vector<std::string> activation_func_arr;
-    std::vector<uint8_t> b_n_arr;
+    std::vector<uint16_t> b_n_arr;
     uint32_t num_sets;
     T learning_rate;
     uint32_t epoch_idx;
