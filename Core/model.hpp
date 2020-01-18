@@ -43,12 +43,20 @@ Dense<T> :: initialize_global_variables()
     this->network[0] = new Layer<T>(this->lSize_arr[0], this->lSize_arr[1], this->act_func_arr[0], this->weight_range);
     this->network[0]->set_NeuronArr1D(this->input_data[0]);
     this->network[0]->init_Mat2D();
+    if(this->bias_boolean_arr[0] == 1)
+    {
+        this->network[0]->add_bias(this->bias_val_arr[0]);
+    }
     while (i < this->num_layers)
     {
         if(i < this->num_layers - 1)
         {
             this->network[i] = new Layer<T>(this->lSize_arr[i], this->lSize_arr[i + 1], this->act_func_arr[i], this->weight_range);
             this->network[i]->init_Mat2D();
+            if(this->bias_boolean_arr[i] == 1)
+            {
+                this->network[i]->add_bias(this->bias_val_arr[i]);
+            }
         }
         else
         {
@@ -172,6 +180,8 @@ Dense<T> :: train()
 {
     uint32_t ii = 0;
     Eigen::Matrix<T, -1, -1> *history = (Eigen::Matrix<T, -1, -1> *)calloc(this->lSize_arr.size() - 1, sizeof(Eigen::Matrix<T, -1, -1>));
+    Eigen::Matrix<T, -1, 1> *bias_history = (Eigen::Matrix<T, -1, 1> *)calloc(this->lSize_arr.size() - 1, sizeof(Eigen::Matrix<T, -1, 1>));
+    std::vector<bool> b_n_arr;
 
     int data_idx = 1;
     init_mat<T>();
@@ -182,10 +192,25 @@ Dense<T> :: train()
     {
         history[ii].resize(this->lSize_arr[ii], this->lSize_arr[ii+1]);
         history[ii] = this->network[ii]->get_variable_mat();
+
+        bool hasB = this->network[ii]->get_bias_boolean_val();
+        if(hasB)
+        {
+            bias_history[ii].resize(this->lSize_arr[ii], 1);
+            bias_history[ii] = this->network[ii]->get_bias_mat();
+        }
+        if(this->network[ii]->get_bias_boolean_val())b_n_arr.push_back(1);
+        else b_n_arr.push_back(0);
+        
+
         ii++;
     }ii=0;
     this->mem.record_mat_data(history);
+    this->mem.set_bias(bias_history);
     this->mem.update_network_variables();
+    this->mem.update_network_bias();
+    for(int i = 0; i < b_n_arr.size(); ++i)this->mem.b_n_arr.push_back(b_n_arr[i]);
+    
 
     for(int n = 1; n < this->epochs; ++n)
     {
@@ -199,11 +224,13 @@ Dense<T> :: train()
             data_idx++;
         }
         this->network[0]->set_Mat2D(Layer<T>::format_variable_mat(__W_Mat_Mem__<T>[/*n - 1*/ 0][0], this->lSize_arr[0], this->lSize_arr[1]));
+        this->network[0]->set_bias_arr(__W_Bias_Mem__<T>[/*n - 1*/ 0][0]); // FIXX
         this->network[0]->feed_forward(this->network[1]);
 
         for(int i = 1; i < this->num_layers - 1; ++i)
         {
             this->network[i]->set_Mat2D(Layer<T>::format_variable_mat(__W_Mat_Mem__<T>[/*n - 1*/ 0][i], this->lSize_arr[i], this->lSize_arr[i + 1]));
+            this->network[i]->set_bias_arr(__W_Bias_Mem__<T>[/*n - 1*/ 0][i]);
             this->network[i]->feed_forward(this->network[i + 1]);
         }this->network[this->num_layers - 1]->feed_forward();
 
@@ -216,13 +243,38 @@ Dense<T> :: train()
         {
             history[ii].resize(this->lSize_arr[ii], this->lSize_arr[ii+1]);
             history[ii] = this->network[ii]->get_variable_mat();
+
+            if(this->network[ii]->get_bias_boolean_val())
+            {
+                bias_history[ii].resize(this->lSize_arr[ii], 1);
+                bias_history[ii] = this->network[ii]->get_bias_mat();
+            }
             ii++;
         }ii=0;
         this->mem.record_mat_data(history);
         this->init_BP_network(this->network);
+        this->mem.set_bias(bias_history);
         this->mem.update_network_variables();
+        this->mem.update_network_bias();
     }
     free(history);
+}
+
+template<class T> inline void
+Dense<T> :: bias(T b_val)
+{
+    uint32_t i = 0, b_vec_size = this->bias_val_arr.size();
+    if(this->num_layers != (b_vec_size + 1))
+    {
+        do
+        {
+            this->bias_val_arr.push_back(0);
+            this->bias_boolean_arr.push_back(0);
+            i++;
+        }while(i <= this->num_layers - (b_vec_size + 1));
+    }
+    this->bias_val_arr.push_back(b_val);
+    this->bias_boolean_arr.push_back(1);
 }
 
 template<class T> void
@@ -235,6 +287,7 @@ Dense<T> :: toCons()
         this->network[i]->toString();
     }
     this->network[this->num_layers - 1]->toString(0);
+
 }
 
 #endif /*model_hpp*/

@@ -71,29 +71,50 @@ Layer<T> :: __weight_to_neuron_matMul__()
     else
     {
         if(!this->is_oNeuron){
-            return_disposable.resize(this->num_cols, 1);
-            while(i < this->num_cols)
+            if(this->has_bias)
             {
-                while(j < this->num_rows)
+                return_disposable.resize(this->num_cols, 1);
+                while(i < this->num_cols)
                 {
-                    var_disposable += this->get_neuron_val(j) * this->get_variable_val(j, i);
-                    j++;
+                    while(j < this->num_rows)
+                    {
+                        var_disposable += this->get_neuron_val(j) * this->get_variable_val(j, i);
+                        j++;
+                    }
+                    return_disposable.row(i).col(0) << __ret_activated_val__(var_disposable, this->_activation_func_) + (bias_val * bias_arr(i, 0));
+                    
+                    //reset var_dispoasable to itial state
+                    var_disposable = 0;
+                    j = 0;
+                    i++;
                 }
-                return_disposable.row(i).col(0) << __ret_activated_val__(var_disposable, this->_activation_func_);
-        
-                //reset var_dispoasable to itial state
-                var_disposable = 0;
-                j = 0;
-                i++;
-            }}
-        else{
+            }else{
+                return_disposable.resize(this->num_cols, 1);
+                while(i < this->num_cols)
+                {
+                    while(j < this->num_rows)
+                    {
+                        var_disposable += this->get_neuron_val(j) * this->get_variable_val(j, i);
+                        j++;
+                    }
+                    return_disposable.row(i).col(0) << __ret_activated_val__(var_disposable, this->_activation_func_);
+            
+                    //reset var_dispoasable to itial state
+                    var_disposable = 0;
+                    j = 0;
+                    i++;
+                }
+            }
+            
+        }else{
             return_disposable.resize(this->num_rows, 1);
             while(j < this->num_rows)
             {
                 var_disposable = this->get_neuron_val(j);
-                return_disposable.row(j).col(0) << __ret_activated_val__(var_disposable, this->_activation_func_);                
+                return_disposable.row(j).col(0) << __ret_activated_val__(var_disposable, this->_activation_func_);          
                 j++;
-            }}
+            }
+        }
         return return_disposable;
     }
 }
@@ -107,6 +128,7 @@ Layer<T> :: Layer(int nRow, int nCol, std::string _activation_func_, bool weight
     this->_activation_func_ = _activation_func_;
     this->Mat2D.resize(nRow, nCol);
     this->NeuronArr1D.resize(nRow, 1);
+    this->has_bias = false;
 }
 
 template<class T>
@@ -117,6 +139,7 @@ Layer<T> :: Layer(int nRow, std::string _activation_func_)
     this->_activation_func_ = _activation_func_;
     this->Mat2D.resize(0, 0);
     this->NeuronArr1D.resize(nRow, 1);
+    this->has_bias = false;
 }
 
 template<class T> inline void
@@ -249,6 +272,50 @@ Layer<T> :: feed_forward()
     this->set_NeuronArr1D(this->__weight_to_neuron_matMul__());
 }
 
+
+template<class T> inline void
+Layer<T> :: add_bias(T b_val)
+{
+    uint32_t i = 0;
+    this->bias_val = b_val;
+    this->bias_arr.resize(this->num_cols, 1);
+    this->has_bias = true;
+    while(i < this->num_cols)
+    {
+        bias_arr.row(i).col(0) << __initialize_rand_weight__<T>(this->weight_range);
+        i++;
+    }
+}
+
+template<class T> inline void
+Layer<T> :: set_bias_arr(T *bias_arr)
+{
+    uint32_t i = 0;
+    while(i < this->num_cols)
+    {
+        this->bias_arr.row(i).col(0) << bias_arr[i];
+        i++;
+    }
+}
+
+template<class T> inline bool
+Layer<T> :: get_bias_boolean_val()
+{
+    return this->has_bias;
+}
+
+template<class T> inline Eigen::Matrix<T, -1, 1>
+Layer<T> :: get_bias_mat()
+{
+    return this->bias_arr;
+}
+
+template<class T> inline T
+Layer<T> :: get_bias_val(unsigned idy)
+{
+    return this->bias_arr(idy, 0);
+}
+
 template<class T> void
 Layer<T> :: toString()
 {
@@ -258,6 +325,7 @@ Layer<T> :: toString()
         std::cout << this->get_neuron_val(i) << std::endl;
     }
 
+    std::cout << "\nWeight Matrix";
     std::cout << "\n";
     for(int i = 0; i < this->num_rows; ++i)
     {
@@ -268,7 +336,16 @@ Layer<T> :: toString()
         std::cout << std::endl;
     }
 
-    std::cout << "\nWeight Matrix";
+    if(this->has_bias)
+    {
+        std::cout << "\nBias Matrix";
+        std::cout << "\n";
+        for(int i = 0; i < this->num_cols; ++i)
+        {
+            std::cout << this->get_bias_val(i) << std::endl;
+        }
+    }
+
     std::cout << "\n===================================================\n\n";
 }
 
@@ -281,6 +358,7 @@ Layer<T> :: toString(int)
         std::cout << this->get_neuron_val(i) << std::endl;
     }
     std::cout << "\n===================================================\n\n";
+
 }
 
 #endif /*layer_matrix_hpp*/

@@ -65,6 +65,7 @@ public:
     inline void add(unsigned lSize, std::string act_func);
     inline void init_BP_network(Layer<T> **);
     inline void train(void);
+    inline void bias(T b_val);
 
     void toCons(void);
     
@@ -77,6 +78,8 @@ private:
 
     unsigned int *input_shape;
     std::vector<unsigned> lSize_arr;
+    std::vector<T> bias_val_arr;
+    std::vector<uint8_t> bias_boolean_arr;
     std::vector<std::string> act_func_arr;
     bool weight_range;
     bool print;
@@ -85,4 +88,3 @@ private:
 
     inline void allocate_network_mem(void);
 };
-

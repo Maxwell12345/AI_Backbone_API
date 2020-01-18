@@ -12,6 +12,7 @@ struct _update_variable_mat_
     std::vector<Eigen::Matrix<T, -1, 1> >y_data;
     std::string cost;
     std::vector<std::string> activation_func_arr;
+    std::vector<uint8_t> b_n_arr;
     uint32_t num_sets;
     T learning_rate;
     uint32_t epoch_idx;
@@ -26,8 +27,10 @@ struct _update_variable_mat_
     inline void format_y_data(T **);
     inline void format_y_data(std::vector<std::vector<T> >);
     inline void update_network_variables(void);
+    inline void update_network_bias(void);
     inline void set_lArr(std::vector<unsigned>);
     inline void set_network(T**);
+    inline void set_bias(Eigen::Matrix<T, -1, 1> *bias_history);
 
     std::vector<std::vector<T> >pseudo_network;
 };
